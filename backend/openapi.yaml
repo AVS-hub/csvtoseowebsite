@@ -1,0 +1,983 @@
+openapi: 3.0.0
+info:
+  title: SiteGenie API
+  description: API for SiteGenie, an AI-powered website creation platform
+  version: 1.0.0
+servers:
+  - url: http://localhost:1337
+    description: Development server
+paths:
+  /api/users/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - User Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegistration"
+      responses:
+        "201":
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/users/login:
+    post:
+      summary: Authenticate user and create session
+      operationId: loginUser
+      tags:
+        - User Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLogin"
+      responses:
+        "200":
+          description: User successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/users/logout:
+    post:
+      summary: Logout user and invalidate session
+      operationId: logoutUser
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User successfully logged out
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/users/me:
+    get:
+      summary: Get current user's profile
+      operationId: getCurrentUser
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      summary: Update current user's profile
+      operationId: updateCurrentUser
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/projects:
+    post:
+      summary: Create a new project
+      operationId: createProject
+      tags:
+        - Project Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectCreation"
+      responses:
+        "201":
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      summary: Get all projects for the current user
+      operationId: getAllProjects
+      tags:
+        - Project Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Projects retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Project"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/projects/{projectId}:
+    get:
+      summary: Get a specific project
+      operationId: getProject
+      tags:
+        - Project Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+      responses:
+        "200":
+          description: Project retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update a specific project
+      operationId: updateProject
+      tags:
+        - Project Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdate"
+      responses:
+        "200":
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete a specific project
+      operationId: deleteProject
+      tags:
+        - Project Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+      responses:
+        "204":
+          description: Project deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/csv:
+    post:
+      summary: Upload CSV file for page generation
+      operationId: uploadProjectCsv
+      tags:
+        - CSV Processing
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "202":
+          description: CSV file uploaded and processing initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CsvUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/pages:
+    post:
+      summary: Create a new page
+      operationId: createPage
+      tags:
+        - Page Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageCreation"
+      responses:
+        "201":
+          description: Page created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      summary: Get all pages for a project
+      operationId: getAllPages
+      tags:
+        - Page Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Pages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Page"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/pages/{pageId}:
+    get:
+      summary: Get a specific page
+      operationId: getPage
+      tags:
+        - Page Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      responses:
+        "200":
+          description: Page retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update a specific page
+      operationId: updatePage
+      tags:
+        - Page Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageUpdate"
+      responses:
+        "200":
+          description: Page updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete a specific page
+      operationId: deletePage
+      tags:
+        - Page Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      responses:
+        "204":
+          description: Page deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/pages/{pageId}/generate:
+    post:
+      summary: Generate AI content for a page
+      operationId: generatePageContent
+      tags:
+        - AI Content Generation
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentGenerationRequest"
+      responses:
+        "202":
+          description: Content generation initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentGenerationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/pages/{pageId}/seo:
+    post:
+      summary: Generate SEO metadata for a page
+      operationId: generatePageSeo
+      tags:
+        - SEO Optimization
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeoMetadataRequest"
+      responses:
+        "200":
+          description: SEO metadata generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoMetadata"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      summary: Get SEO metadata for a page
+      operationId: getPageSeo
+      tags:
+        - SEO Optimization
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      responses:
+        "200":
+          description: SEO metadata retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoMetadata"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update SEO metadata for a page
+      operationId: updatePageSeo
+      tags:
+        - SEO Optimization
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/PageIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeoMetadataUpdate"
+      responses:
+        "200":
+          description: SEO metadata updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoMetadata"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/export:
+    post:
+      summary: Generate a downloadable package of the entire website
+      operationId: exportProject
+      tags:
+        - Export and Download
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+      responses:
+        "202":
+          description: Export process initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/export/{exportId}:
+    get:
+      summary: Get the status of an export process
+      operationId: getExportStatus
+      tags:
+        - Export and Download
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/ExportIdParam"
+      responses:
+        "200":
+          description: Export status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/export/{exportId}/download:
+    get:
+      summary: Download the exported website package
+      operationId: downloadExport
+      tags:
+        - Export and Download
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/ExportIdParam"
+      responses:
+        "200":
+          description: Export package downloaded successfully
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/projects/{projectId}/analytics:
+    get:
+      summary: Get analytics data for a project
+      operationId: getProjectAnalytics
+      tags:
+        - Analytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectIdParam"
+        - $ref: "#/components/parameters/DateFromParam"
+        - $ref: "#/components/parameters/DateToParam"
+      responses:
+        "200":
+          description: Analytics data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsData"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProjectIdParam:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+    PageIdParam:
+      name: pageId
+      in: path
+      required: true
+      schema:
+        type: string
+    ExportIdParam:
+      name: exportId
+      in: path
+      required: true
+      schema:
+        type: string
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    DateFromParam:
+      name: dateFrom
+      in: query
+      schema:
+        type: string
+        format: date
+    DateToParam:
+      name: dateTo
+      in: query
+      schema:
+        type: string
+        format: date
+  schemas:
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+        - first_name
+        - last_name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        first_name:
+          type: string
+        last_name:
+          type: string
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    UserResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        created_at:
+          type: integer
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user_id:
+          type: string
+        expires_at:
+          type: integer
+    UserProfile:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        created_at:
+          type: integer
+        last_login:
+          type: integer
+    UserProfileUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+          minLength: 8
+    ProjectCreation:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        default_language:
+          type: string
+          default: en
+    Project:
+      type: object
+      properties:
+        project_id:
+          type: string
+        user_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+        status:
+          type: string
+          enum:
+            - draft
+            - published
+        default_language:
+          type: string
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        default_language:
+          type: string
+    CsvUploadResponse:
+      type: object
+      properties:
+        upload_id:
+          type: string
+        file_name:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+    PageCreation:
+      type: object
+      required:
+        - title
+        - url_slug
+      properties:
+        title:
+          type: string
+        url_slug:
+          type: string
+        content:
+          type: string
+        is_pillar_page:
+          type: boolean
+          default: false
+        parent_page_id:
+          type: string
+    Page:
+      type: object
+      properties:
+        page_id:
+          type: string
+        project_id:
+          type: string
+        title:
+          type: string
+        url_slug:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+        is_pillar_page:
+          type: boolean
+        parent_page_id:
+          type: string
+    PageUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        url_slug:
+          type: string
+        content:
+          type: string
+        is_pillar_page:
+          type: boolean
+        parent_page_id:
+          type: string
+    ContentGenerationRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+    ContentGenerationResponse:
+      type: object
+      properties:
+        generation_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+    SeoMetadataRequest:
+      type: object
+      properties:
+        meta_title:
+          type: string
+        meta_description:
+          type: string
+        focus_keyword:
+          type: string
+        secondary_keywords:
+          type: array
+          items:
+            type: string
+    SeoMetadata:
+      type: object
+      properties:
+        metadata_id:
+          type: string
+        page_id:
+          type: string
+        meta_title:
+          type: string
+        meta_description:
+          type: string
+        focus_keyword:
+          type: string
+        secondary_keywords:
+          type: array
+          items:
+            type: string
+    SeoMetadataUpdate:
+      type: object
+      properties:
+        meta_title:
+          type: string
+        meta_description:
+          type: string
+        focus_keyword:
+          type: string
+        secondary_keywords:
+          type: array
+          items:
+            type: string
+    ExportResponse:
+      type: object
+      properties:
+        export_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+    ExportStatus:
+      type: object
+      properties:
+        export_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        download_url:
+          type: string
+    AnalyticsData:
+      type: object
+      properties:
+        project_id:
+          type: string
+        page_views:
+          type: integer
+        unique_visitors:
+          type: integer
+        average_time_on_site:
+          type: number
+        bounce_rate:
+          type: number
+        top_pages:
+          type: array
+          items:
+            type: object
+            properties:
+              page_id:
+                type: string
+              url_slug:
+                type: string
+              views:
+                type: integer
+    Pagination:
+      type: object
+      properties:
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+        current_page:
+          type: integer
+        limit:
+          type: integer
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
