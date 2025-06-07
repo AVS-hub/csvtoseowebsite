@@ -6,7 +6,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node initdb && nodemon server"
+    "start": "node initdb.js && nodemon server.js"
   },
   "nodemonConfig": {
     "ignore": [
@@ -27,7 +27,6 @@
     "jsonwebtoken": "^9.0.2",
     "uuid": "*",
     "yaml": "^2.5.0",
-    "bcrypt": "*",
     "multer": "*",
     "openai": "*"
   },
