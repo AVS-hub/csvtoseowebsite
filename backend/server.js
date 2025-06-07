@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcrypt';
+// Use bcryptjs to avoid native module issues
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import { PGlite } from "@electric-sql/pglite";

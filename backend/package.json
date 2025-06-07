@@ -27,7 +27,6 @@
     "jsonwebtoken": "^9.0.2",
     "uuid": "*",
     "yaml": "^2.5.0",
-    "bcrypt": "*",
     "multer": "*",
     "openai": "*"
   },
